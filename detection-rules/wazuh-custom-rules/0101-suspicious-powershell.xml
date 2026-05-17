@@ -1,0 +1,49 @@
+<!--
+  Rule:     Suspicious PowerShell Execution
+  ID:       100200, 100201
+  Author:   SOC Home Lab
+  MITRE:    T1059.001 — Command and Scripting Interpreter: PowerShell
+  Severity: 10 (high)
+
+  Intent:
+    Detect common attacker-flavor PowerShell:
+      - -EncodedCommand (base64 obfuscation)
+      - -nop / -noprofile + -w hidden (silent execution)
+      - DownloadString / IEX (in-memory download-and-execute)
+
+  Source:
+    Sysmon Event ID 1 (process creation), forwarded via the
+    Microsoft-Windows-Sysmon/Operational channel.
+
+  FP:
+    - SCCM / Intune scripts often use -nop -w hidden
+    - Some legitimate vendor installers use -EncodedCommand
+  Tuning:
+    - Add an allow-list rule (100299) for known signed parent processes
+-->
+
+<group name="windows,sysmon,powershell,attack,">
+
+  <rule id="100200" level="10">
+    <if_sid>61603</if_sid>  <!-- Sysmon: ProcessCreate base rule -->
+    <field name="win.eventdata.image" type="pcre2">(?i)powershell(_ise)?\.exe$</field>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)(-enc(odedcommand)?\s|-nop\s+-w\s+hidden|downloadstring|iex\s*\(|invoke-expression)</field>
+    <description>Suspicious PowerShell invocation on $(win.system.computer) by $(win.eventdata.user)</description>
+    <mitre>
+      <id>T1059.001</id>
+    </mitre>
+    <group>powershell,attack,</group>
+  </rule>
+
+  <rule id="100201" level="12">
+    <if_sid>100200</if_sid>
+    <field name="win.eventdata.parentImage" type="pcre2">(?i)(winword|excel|outlook|acrord32)\.exe$</field>
+    <description>PowerShell spawned by Office product — likely macro execution on $(win.system.computer)</description>
+    <mitre>
+      <id>T1059.001</id>
+      <id>T1566.001</id>
+    </mitre>
+    <group>powershell,office_macro,attack,</group>
+  </rule>
+
+</group>

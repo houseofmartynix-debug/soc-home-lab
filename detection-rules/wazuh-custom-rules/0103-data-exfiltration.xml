@@ -1,0 +1,48 @@
+<!--
+  Rule:     Large Outbound Transfer / Possible Exfiltration
+  ID:       100400, 100401
+  Author:   SOC Home Lab
+  MITRE:    T1048 — Exfiltration Over Alternative Protocol
+  Severity: 10 (high)
+
+  Intent:
+    Surface unusually large outbound network connections from endpoints.
+    Source: Sysmon Event ID 3 (NetworkConnect). Wazuh decodes byte counts
+    when feeding via Windows Event Forwarding or NXLog if available; here
+    we approximate by alerting on uncommon destination ports + sustained
+    connections, then escalate when paired with archive activity.
+
+  FP:
+    - Cloud backup tools (OneDrive, Dropbox) running normally
+    - Software updates / package mirrors
+  Tuning:
+    - Allow-list known CDN ASNs after baseline (rule 100499)
+-->
+
+<group name="windows,sysmon,exfiltration,attack,">
+
+  <!-- Outbound to non-standard high port -->
+  <rule id="100400" level="7">
+    <if_sid>61605</if_sid>  <!-- Sysmon 3: NetworkConnect -->
+    <field name="win.eventdata.destinationPort" type="pcre2">^(4444|8443|8080|9001|9002|31337)$</field>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(powershell|cmd|cscript|wscript|curl|wget|certutil)\.exe$</field>
+    <description>Suspicious outbound connection from $(win.eventdata.image) to port $(win.eventdata.destinationPort)</description>
+    <mitre>
+      <id>T1048</id>
+    </mitre>
+    <group>exfiltration,attack,</group>
+  </rule>
+
+  <!-- Correlate: archive tool + outbound, within 5 minutes -->
+  <rule id="100401" level="12" frequency="1" timeframe="300">
+    <if_matched_sid>100400</if_matched_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(7z|rar|winrar|tar)\.exe$</field>
+    <description>Possible staged exfiltration: archive activity followed by outbound transfer on $(win.system.computer)</description>
+    <mitre>
+      <id>T1048</id>
+      <id>T1560.001</id>
+    </mitre>
+    <group>exfiltration,attack,</group>
+  </rule>
+
+</group>

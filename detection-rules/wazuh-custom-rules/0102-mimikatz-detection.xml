@@ -1,0 +1,57 @@
+<!--
+  Rule:     Mimikatz / Credential Dumping Indicators
+  ID:       100300, 100301, 100302
+  Author:   SOC Home Lab
+  MITRE:    T1003.001 — OS Credential Dumping: LSASS Memory
+  Severity: 12 (critical)
+
+  Intent:
+    Detect three common credential-dumping signals:
+      - Process named mimikatz.exe (lazy attacker)
+      - Known mimikatz command-line strings (sekurlsa::, lsadump::)
+      - Suspicious access to lsass.exe (Sysmon Event ID 10)
+
+  FP:
+    - Legitimate security tools (CrowdStrike, Defender) access lsass
+    - Process Explorer running with admin rights
+  Tuning:
+    - Allow-list signed AV / EDR access via rule 100399
+-->
+
+<group name="windows,sysmon,credential_access,attack,">
+
+  <!-- Image name itself -->
+  <rule id="100300" level="12">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\mimikatz(_x64)?\.exe$</field>
+    <description>Mimikatz binary executed on $(win.system.computer)</description>
+    <mitre>
+      <id>T1003.001</id>
+    </mitre>
+    <group>credential_access,attack,</group>
+  </rule>
+
+  <!-- Known command-line markers (handles renamed binaries) -->
+  <rule id="100301" level="12">
+    <if_sid>61603</if_sid>
+    <field name="win.eventdata.commandLine" type="pcre2">(?i)(sekurlsa::logonpasswords|lsadump::sam|kerberos::list|privilege::debug)</field>
+    <description>Mimikatz command observed on $(win.system.computer) — possible credential theft</description>
+    <mitre>
+      <id>T1003.001</id>
+    </mitre>
+    <group>credential_access,attack,</group>
+  </rule>
+
+  <!-- LSASS access from non-system process -->
+  <rule id="100302" level="11">
+    <if_sid>61609</if_sid>  <!-- Sysmon 10: ProcessAccess -->
+    <field name="win.eventdata.targetImage" type="pcre2">(?i)\\lsass\.exe$</field>
+    <field name="win.eventdata.grantedAccess" type="pcre2">^0x1010$|^0x1410$|^0x1438$</field>
+    <description>Suspicious LSASS access from $(win.eventdata.sourceImage) on $(win.system.computer)</description>
+    <mitre>
+      <id>T1003.001</id>
+    </mitre>
+    <group>credential_access,attack,</group>
+  </rule>
+
+</group>

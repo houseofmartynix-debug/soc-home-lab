@@ -1,0 +1,36 @@
+title: Successful Logon Outside Business Hours
+id: 2f7d8c01-92b4-4e89-bd6c-1a72e3f9c0d4
+status: experimental
+description: |
+  Detects successful interactive logons (Event ID 4624, Type 2 or 10) outside
+  standard business hours (08:00–19:00 local). On its own this is low-fidelity,
+  but combined with other signals (new asset, foreign country, unusual workstation)
+  it is a useful pivot for hunters.
+author: SOC Home Lab
+date: 2026/05/17
+references:
+  - https://attack.mitre.org/techniques/T1078/
+tags:
+  - attack.initial_access
+  - attack.t1078
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4624
+    LogonType:
+      - 2   # Interactive
+      - 10  # RemoteInteractive (RDP)
+  timeframe_off_hours:
+    # Note: Sigma backends translate this hour filter per-SIEM.
+    # In Wazuh/OpenSearch we apply with a time filter on @timestamp.
+    HourOfDay|gte: 19
+    HourOfDay|lt: 8
+  filter_service_accounts:
+    TargetUserName|startswith: 'svc_'
+  condition: selection and timeframe_off_hours and not filter_service_accounts
+falsepositives:
+  - Genuine after-hours work (engineers on-call)
+  - International users in different timezones
+level: low

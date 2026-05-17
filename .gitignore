@@ -1,0 +1,30 @@
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Secrets — never commit
+*.pem
+*.key
+*.env
+secrets/
+credentials.json
+
+# Wazuh keys / config backups
+ossec.conf.bak
+client.keys
+
+# Logs collected during real investigations
+investigations/raw/
+*.pcap
+*.evtx
+
+# Python
+__pycache__/
+*.pyc
+venv/
