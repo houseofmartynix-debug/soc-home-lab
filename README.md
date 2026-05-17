@@ -189,6 +189,10 @@ Full step-by-step: [docs/wazuh-installation.md](docs/wazuh-installation.md)
 
 ## Author
 
-Built as part of my journey toward a career as a **SOC Analyst**. Feedback, questions, and collaboration always welcome via GitHub Issues.
+**Marco Selva** — aspiring **SOC Analyst**. This lab is part of my journey toward a career in blue-team / security operations. Feedback, questions, and collaboration always welcome.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-mrcslvknm-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mrcslvknm)
+[![GitHub](https://img.shields.io/badge/GitHub-houseofmartynix--debug-181717?logo=github&logoColor=white)](https://github.com/houseofmartynix-debug)
+[![Email](https://img.shields.io/badge/Email-houseofmartynix%40gmail.com-EA4335?logo=gmail&logoColor=white)](mailto:houseofmartynix@gmail.com)
 
 > *"You can't defend what you don't understand. This lab is how I learned to understand it."*
